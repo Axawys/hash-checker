@@ -10,6 +10,6 @@
 ```bash
 flatpak install --user HashChecker.flatpak
 ```
-[!Screanshot1](screanshots/1.png)
-[!Screanshot2](screanshots/2.png)
-[!Screanshot3](screanshots/3.png)
+![Screanshot1](screanshots/1.png)
+![Screanshot2](screanshots/2.png)
+![Screanshot3](screanshots/3.png)
