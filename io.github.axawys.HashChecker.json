@@ -1,0 +1,32 @@
+{
+    "app-id": "io.github.axawys.HashChecker",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "46",
+    "sdk": "org.gnome.Sdk",
+    "command": "hashchecker",
+    "finish-args": [
+        "--share=ipc",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--device=dri",
+        "--filesystem=home",
+        "--own-name=io.github.axawys.HashChecker"
+    ],
+    "modules": [
+        {
+            "name": "hashchecker",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -D main.py /app/bin/hashchecker",
+                "chmod +x /app/bin/hashchecker",
+                "install -D io.github.axawys.HashChecker.desktop /app/share/applications/io.github.axawys.HashChecker.desktop",
+                "install -D icon.png /app/share/icons/hicolor/256x256/apps/io.github.axawys.HashChecker.png"
+            ],
+            "sources": [
+                { "type": "file", "path": "main.py" },
+                { "type": "file", "path": "io.github.axawys.HashChecker.desktop" },
+                { "type": "file", "path": "icon.png" }
+            ]
+        }
+    ]
+}
