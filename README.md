@@ -5,10 +5,9 @@
 ## Установка
 
 1. Убедитесь, что в вашей системе установлен Flatpak.
-2. Скачайте файл `HashChecker.flatpak` из раздела [Releases](ссылка_на_ваши_релизы).
-3. Установите его командой:
+3. Установите одной командой:
 ```bash
-flatpak install --user HashChecker.flatpak
+wget -O HashChecker.flatpak https://github.com/Axawys/hash-checker/releases/download/v1.0.0/HashChecker.flatpak && flatpak install --user -y HashChecker.flatpak
 ```
 ![Screanshot1](screanshots/1.png)
 ![Screanshot2](screanshots/2.png)
