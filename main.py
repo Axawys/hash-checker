@@ -24,14 +24,14 @@ class HashCheckerWin(Adw.ApplicationWindow):
         super().__init__(**kwargs)
 
         self.set_title("Проверка контрольных сумм")
-        self.set_default_size(500, 480)
+        self.set_default_size(520, 580)
         
         self.file_path = None
         self.hash_path = None
+        self.manual_hash = None 
         self.calculated_hash = None
         self.is_dialog_open = False 
 
-        # Карта алгоритмов для hashlib
         self.algo_map = {
             "SHA-256": hashlib.sha256,
             "SHA-512": hashlib.sha512,
@@ -51,77 +51,78 @@ class HashCheckerWin(Adw.ApplicationWindow):
         self.toast_overlay = Adw.ToastOverlay()
         self.set_content(self.toast_overlay)
 
-        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.toast_overlay.set_child(main_box)
-        main_box.append(Adw.HeaderBar())
+        self.toolbar_view = Adw.ToolbarView()
+        self.toast_overlay.set_child(self.toolbar_view)
+
+        header_bar = Adw.HeaderBar()
+        self.window_title = Adw.WindowTitle(title="Hash Checker")
+        header_bar.set_title_widget(self.window_title)
+        self.toolbar_view.add_top_bar(header_bar)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_propagate_natural_height(True)
+        self.toolbar_view.set_content(scrolled)
 
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
-        content_box.set_margin_top(20); content_box.set_margin_bottom(20)
-        content_box.set_margin_start(20); content_box.set_margin_end(20)
-        main_box.append(content_box)
+        content_box.set_margin_top(24); content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24); content_box.set_margin_end(24)
+        scrolled.set_child(content_box)
 
-        # --- Группа настроек ---
-        settings_group = Adw.PreferencesGroup(title="Настройки алгоритма")
+        # Настройки
+        settings_group = Adw.PreferencesGroup(title="Настройки")
         content_box.append(settings_group)
 
-        # Выбор алгоритма
         self.algo_row = Adw.ComboRow(title="Алгоритм хеширования")
-        # Создаем модель данных для выпадающего списка
-        algo_model = Gtk.StringList.new(self.available_algos)
-        self.algo_row.set_model(algo_model)
-        # Устанавливаем SHA-256 (индекс 0) по умолчанию
+        self.algo_row.set_model(Gtk.StringList.new(self.available_algos))
         self.algo_row.set_selected(0)
         self.algo_row.connect("notify::selected", self.on_algo_changed)
         settings_group.add(self.algo_row)
 
-        # --- Группа выбора файлов ---
-        files_group = Adw.PreferencesGroup(title="Выбор файлов")
+        # Данные
+        files_group = Adw.PreferencesGroup(title="Данные для сверки")
         content_box.append(files_group)
 
-        # Строка файла для проверки
-        self.row_file = Adw.ActionRow(title="Файл для проверки", subtitle="Не выбран")
+        self.row_file = Adw.ActionRow(title="Файл для проверки", subtitle="Выберите файл...")
         self.row_file.add_prefix(Gtk.Image.new_from_icon_name("document-open-symbolic"))
         
-        self.file_status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        file_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.file_spinner = Gtk.Spinner()
         self.file_done_icon = Gtk.Image.new_from_icon_name("emblem-ok-symbolic")
         self.file_done_icon.add_css_class("success-icon")
         self.file_done_icon.set_visible(False)
-        
-        btn_file = Gtk.Button(icon_name="document-open-symbolic", css_classes=["flat"])
+        btn_file = Gtk.Button(icon_name="document-open-symbolic", css_classes=["flat"], tooltip_text="Выбрать файл")
         btn_file.connect("clicked", self.on_choose_file)
         
-        self.file_status_box.append(self.file_spinner)
-        self.file_status_box.append(self.file_done_icon)
-        self.file_status_box.append(btn_file)
-        
-        self.row_file.add_suffix(self.file_status_box)
+        file_actions.append(self.file_spinner); file_actions.append(self.file_done_icon); file_actions.append(btn_file)
+        self.row_file.add_suffix(file_actions)
         files_group.add(self.row_file)
 
-        # Строка эталонного хеша
-        self.row_hash = Adw.ActionRow(title="Файл с хешем", subtitle="Не выбран")
+        self.row_hash = Adw.ActionRow(title="Эталонный хеш", subtitle="Файл или вставка (sha256:...)")
         self.row_hash.add_prefix(Gtk.Image.new_from_icon_name("edit-paste-symbolic"))
-        btn_hash = Gtk.Button(icon_name="document-open-symbolic", css_classes=["flat"])
-        btn_hash.connect("clicked", self.on_choose_hash)
-        self.row_hash.add_suffix(btn_hash)
+        
+        hash_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        btn_paste = Gtk.Button(icon_name="edit-paste-symbolic", css_classes=["flat"], tooltip_text="Вставить из буфера")
+        btn_paste.connect("clicked", self.on_paste_clicked)
+        btn_hash_file = Gtk.Button(icon_name="document-open-symbolic", css_classes=["flat"], tooltip_text="Выбрать файл с хешем")
+        btn_hash_file.connect("clicked", self.on_choose_hash)
+        
+        hash_actions.append(btn_paste); hash_actions.append(btn_hash_file)
+        self.row_hash.add_suffix(hash_actions)
         files_group.add(self.row_hash)
 
-        # Кнопка Сверить
         self.check_button = Gtk.Button(label="Сверить хеш-суммы", css_classes=["suggested-action", "pill"])
         self.check_button.set_halign(Gtk.Align.CENTER)
-        self.check_button.set_size_request(200, 44)
+        self.check_button.set_margin_top(12)
+        self.check_button.set_size_request(220, 44)
         self.check_button.set_sensitive(False)
         self.check_button.connect("clicked", self.on_verify_clicked)
         content_box.append(self.check_button)
 
-        # Карточка результата
         self.result_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12, css_classes=["result-card"])
         self.result_card.set_visible(False)
         content_box.append(self.result_card)
-
         self.result_icon = Gtk.Image(pixel_size=32)
         self.result_card.append(self.result_icon)
-        
         res_text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self.result_title = Gtk.Label(xalign=0)
         self.result_desc = Gtk.Label(xalign=0, css_classes=["caption"])
@@ -131,134 +132,172 @@ class HashCheckerWin(Adw.ApplicationWindow):
     def get_current_algo_name(self):
         return self.available_algos[self.algo_row.get_selected()]
 
-    def show_toast(self, message):
-        GLib.idle_add(self._do_show_toast, message)
-
-    def _do_show_toast(self, message):
+    def show_toast(self, message, timeout=1):
         toast = Adw.Toast.new(message)
-        toast.set_timeout(1)
+        toast.set_timeout(timeout)
         self.toast_overlay.add_toast(toast)
-        return False
 
     def on_algo_changed(self, *args):
-        # Если файл уже выбран, пересчитываем хеш с новым алгоритмом
-        if self.file_path:
-            self.start_hashing(self.file_path)
+        if self.file_path: self.start_hashing(self.file_path)
 
+    # --- УНИВЕРСАЛЬНЫЙ ПАРСЕР ХЕША ---
+    def process_hash_input(self, raw_text, source_display_name):
+        """Парсит строку, определяет алгоритм и обновляет состояние"""
+        if not raw_text: return False
+
+        clean_text = raw_text.strip()
+        final_hash = clean_text
+        detected_algo_idx = None
+
+        # Проверка на формат префикса "sha256:хеш"
+        if ":" in clean_text:
+            prefix, content = clean_text.split(":", 1)
+            prefix = prefix.lower().strip().replace("-", "")
+            for i, algo_name in enumerate(self.available_algos):
+                if algo_name.lower().replace("-", "") == prefix:
+                    detected_algo_idx = i
+                    final_hash = content.strip()
+                    break
+
+        # Очистка от мусора (берем первое слово)
+        final_hash = final_hash.split()[0].lower()
+
+        if len(final_hash) < 8:
+            return False
+
+        self.manual_hash = final_hash
+        
+        # Авто-переключение алгоритма
+        if detected_algo_idx is not None:
+            if self.algo_row.get_selected() != detected_algo_idx:
+                self.algo_row.set_selected(detected_algo_idx)
+                self.show_toast(f"Алгоритм изменен на {self.available_algos[detected_algo_idx]}", timeout=1)
+
+        # Обновление UI
+        short_hash = f"{final_hash[:6]}...{final_hash[-6:]}" if len(final_hash) > 16 else final_hash
+        self.row_hash.set_subtitle(f"{source_display_name}: {short_hash}")
+        self.result_card.set_visible(False)
+        self.update_button_state()
+        return True
+
+    def on_paste_clicked(self, _):
+        clipboard = self.get_clipboard()
+        clipboard.read_text_async(None, self.on_paste_received)
+
+    def on_paste_received(self, clipboard, result):
+        text = clipboard.read_text_finish(result)
+        if not self.process_hash_input(text, "Из буфера"):
+            self.show_toast("Неверный формат хеша")
+
+    def on_choose_hash(self, _):
+        if self.is_dialog_open: return
+        self.is_dialog_open = True
+        Gtk.FileDialog(title="Выберите файл с хешем").open(self, None, self.on_hash_file_selected)
+
+    def on_hash_file_selected(self, dialog, result):
+        self.is_dialog_open = False
+        try:
+            file = dialog.open_finish(result)
+            if file:
+                path = file.get_path()
+                self.hash_path = path
+                # Пытаемся прочитать файл и сразу распарсить хеш
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if not self.process_hash_input(content, os.path.basename(path)):
+                        # Если не распарсилось красиво, просто ставим имя файла
+                        self.row_hash.set_subtitle(os.path.basename(path))
+                        self.manual_hash = None
+        except Exception as e:
+            self.show_toast("Ошибка чтения файла")
+
+    # --- ФАЙЛОВЫЕ ОПЕРАЦИИ ---
     def on_choose_file(self, _):
         if self.is_dialog_open: return
         self.is_dialog_open = True
-        dialog = Gtk.FileDialog(title="Выберите файл для проверки")
-        dialog.open(self, None, self.on_file_selected)
+        Gtk.FileDialog(title="Выберите файл для проверки").open(self, None, self.on_file_selected)
 
     def on_file_selected(self, dialog, result):
         self.is_dialog_open = False
         try:
             file = dialog.open_finish(result)
             if file:
-                path = file.get_path()
-                self.file_path = path
-                self.start_hashing(path)
+                self.file_path = file.get_path()
+                self.start_hashing(self.file_path)
         except: pass 
 
     def start_hashing(self, path):
         self.calculated_hash = None
         algo_name = self.get_current_algo_name()
-        
         self.row_file.set_subtitle(f"Вычисляю {algo_name}...")
         self.file_done_icon.set_visible(False)
         self.file_spinner.start()
         self.result_card.set_visible(False)
         self.update_button_state()
-
-        self.show_toast(f"Вычисляю {algo_name}...")
-        # Передаем название алгоритма в поток
         thread = threading.Thread(target=self.compute_hash_thread, args=(path, algo_name))
         thread.daemon = True
         thread.start()
 
-    def on_choose_hash(self, _):
-        if self.is_dialog_open: return
-        self.is_dialog_open = True
-        dialog = Gtk.FileDialog(title="Выберите файл с хешем")
-        dialog.open(self, None, self.on_hash_selected)
-
-    def on_hash_selected(self, dialog, result):
-        self.is_dialog_open = False
+    def compute_hash_thread(self, path, algo_name):
         try:
-            file = dialog.open_finish(result)
-            if file:
-                self.hash_path = file.get_path()
-                self.row_hash.set_subtitle(os.path.basename(self.hash_path))
-                self.result_card.set_visible(False)
-                self.update_button_state()
-        except: pass
+            h = self.algo_map[algo_name]()
+            with open(path, "rb") as f:
+                while chunk := f.read(1024*1024): h.update(chunk)
+            GLib.idle_add(self.on_hash_computed, h.hexdigest(), path, algo_name)
+        except:
+            GLib.idle_add(self.on_hash_error, path)
 
-    def compute_hash_thread(self, path_to_process, algo_name):
-        try:
-            # Динамически выбираем функцию хеширования
-            hash_func = self.algo_map[algo_name]()
-            with open(path_to_process, "rb") as f:
-                while chunk := f.read(1024 * 1024):
-                    hash_func.update(chunk)
-            res = hash_func.hexdigest()
-            # Добавляем проверку текущего алгоритма, чтобы избежать гонки потоков
-            GLib.idle_add(self.on_hash_computed, res, path_to_process, algo_name)
-        except Exception:
-            GLib.idle_add(self.on_hash_error, path_to_process)
-
-    def on_hash_computed(self, hash_res, processed_path, processed_algo):
-        # Проверяем, не изменил ли пользователь файл или алгоритм за время работы потока
-        if processed_path == self.file_path and processed_algo == self.get_current_algo_name():
-            self.calculated_hash = hash_res
+    def on_hash_computed(self, res, path, algo):
+        if path == self.file_path and algo == self.get_current_algo_name():
+            self.calculated_hash = res
             self.file_spinner.stop()
             self.file_done_icon.set_visible(True)
-            self.row_file.set_subtitle(os.path.basename(processed_path))
-            self.show_toast(f"{processed_algo} вычислен!")
+            self.row_file.set_subtitle(os.path.basename(path))
             self.update_button_state()
         return False
 
     def on_hash_error(self, path):
         if path == self.file_path:
             self.file_spinner.stop()
-            self.row_file.set_subtitle("Ошибка чтения файла")
-        self.show_toast("Ошибка при расчете хеша")
+            self.row_file.set_subtitle("Ошибка чтения")
         return False
 
     def update_button_state(self):
-        ready = bool(self.file_path and self.hash_path and self.calculated_hash)
-        self.check_button.set_sensitive(ready)
+        # Готовы, если есть расчет И (есть распарсенный хеш ИЛИ есть путь к файлу)
+        has_ref = bool(self.manual_hash or self.hash_path)
+        self.check_button.set_sensitive(bool(self.file_path and has_ref and self.calculated_hash))
 
     def on_verify_clicked(self, _):
-        try:
-            with open(self.hash_path, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if not content:
-                    self.show_toast("Файл с хешем пуст")
-                    return
-                # Берем первую строку, первое слово.
-                # Работает для стандартных файлов .md5, .sha1, .sha256
-                expected_hash = content.splitlines()[0].split()[0].lower()
-        except:
-            self.show_toast("Не удалось прочитать файл хеша")
-            return
+        expected = self.manual_hash
+        
+        # Если в manual_hash пусто (файл не распарсился при выборе), пробуем прочитать сейчас
+        if not expected and self.hash_path:
+            try:
+                with open(self.hash_path, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if content: expected = content.splitlines()[0].split()[0].lower()
+            except:
+                self.show_toast("Ошибка чтения файла")
+                return
+
+        if not expected: return
 
         self.result_card.set_visible(True)
         for c in ["card-success", "card-error"]: self.result_card.remove_css_class(c)
         for c in ["success-text", "error-text"]: self.result_title.remove_css_class(c)
 
-        if self.calculated_hash == expected_hash:
+        if self.calculated_hash == expected:
             self.result_card.add_css_class("card-success")
             self.result_title.add_css_class("success-text")
             self.result_title.set_label("Суммы совпали")
             self.result_icon.set_from_icon_name("emblem-ok-symbolic")
-            self.result_desc.set_label(f"Целостность данных ({self.get_current_algo_name()}) подтверждена")
+            self.result_desc.set_label(f"Целостность данных подтверждена ({self.get_current_algo_name()})")
         else:
             self.result_card.add_css_class("card-error")
             self.result_title.add_css_class("error-text")
             self.result_title.set_label("Суммы различаются!")
             self.result_icon.set_from_icon_name("dialog-error-symbolic")
-            self.result_desc.set_label(f"Файл изменен. Алгоритм: {self.get_current_algo_name()}")
+            self.result_desc.set_label("Данные не совпадают с эталоном")
 
 class App(Adw.Application):
     def __init__(self):
