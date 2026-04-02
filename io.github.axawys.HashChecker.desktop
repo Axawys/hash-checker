@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Hash Checker
-Comment=Проверка контрольных сумм
-Exec=hashchecker
-Icon=io.github.axawys.HashChecker
-Type=Application
-Categories=Utility;
-Terminal=false
