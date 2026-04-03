@@ -74,7 +74,7 @@ flutter build windows
 После этого можно собрать установщик через Inno Setup:
 
 ```powershell
-& "C:\Users\axawys\AppData\Local\Programs\Inno Setup 6\ISCC.exe" .\installer.iss
+& "C:\Users\ВАШЕ_ИМЯ_ПОЛЬЗОВАТЕЛЯ\AppData\Local\Programs\Inno Setup 6\ISCC.exe" .\installer.iss
 ```
 
 ## Структура проекта
