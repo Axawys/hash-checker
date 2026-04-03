@@ -6,8 +6,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License MIT">
-  <img src="https://img.shields.io/badge/flutter-desktop-blue" alt="Flutter">
   <img src="https://img.shields.io/badge/platform-windows%20%7C%20linux-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/dart-%230175C2.svg?style=flat&logo=dart&logoColor=white" alt="Dart">
+  <img src="https://img.shields.io/badge/flutter-%2302569B.svg?style=flat&logo=flutter&logoColor=white" alt="Flutter Logo">
 </p>
 
 Кроссплатформенная утилита для проверки контрольных сумм файлов.  
