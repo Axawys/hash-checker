@@ -28,15 +28,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   auto screen = GetSystemMetrics(SM_CXSCREEN);
   auto screenY = GetSystemMetrics(SM_CYSCREEN);
 
-  int width = 550;
-  int height = 700;
+  int width = 520;
+  int height = 690;
 
   Win32Window::Point origin(
       (screen - width) / 2,
       (screenY - height) / 2
   );
 
-Win32Window::Size size(width, height);
+  Win32Window::Size size(width, height);
   if (!window.Create(L"Hash Checker", origin, size)) {
     return EXIT_FAILURE;
   }

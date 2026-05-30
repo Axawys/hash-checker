@@ -1,5 +1,5 @@
 #define MyAppName "HashChecker"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "2.0.0"
 #define MyAppPublisher "Axawys"
 #define MyAppExeName "hashchecker.exe"
 

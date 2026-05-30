@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=HashChecker
+Comment=Check file hashes
+Exec=/usr/lib64/hashchecker/hashchecker
+Icon=hashchecker
+Terminal=false
+Categories=Utility;

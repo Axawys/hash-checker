@@ -32,7 +32,7 @@ Windows:
 - HashChecker-Setup.exe
 
 Linux:
-- будет добавлено (Flatpak или бинарник)
+- hashchecker-2.0.0-1.x86_64.rpm
 
 ## Возможности
 
@@ -63,8 +63,38 @@ https://docs.flutter.dev/get-started/install
 
 ```bash
 flutter pub get
-flutter run
-````
+flutter run -d linux
+```
+
+### Сборка Linux
+
+```bash
+flutter build linux --release
+```
+
+Готовый bundle будет создан в:
+
+```text
+build/linux/x64/release/bundle/
+```
+
+Для RPM-релиза используется `fpm`. Пример упаковки:
+
+```bash
+fpm -s dir -t rpm \
+  -n hashchecker \
+  -v 2.0.0 \
+  --iteration 1 \
+  -a x86_64 \
+  --description "File hash checker" \
+  --url https://github.com/Axawys/hash-checker \
+  --license MIT \
+  --maintainer Axawys \
+  --depends gtk3 \
+  -C /path/to/package-root \
+  -p dist/hashchecker-2.0.0-1.x86_64.rpm \
+  .
+```
 
 ### Сборка Windows
 
@@ -81,17 +111,17 @@ flutter build windows
 ## Структура проекта
 
 ```text
-lib/        — основной код
-windows/    — Windows runner
-linux/      — Linux runner
-assets/     — ресурсы
-packaging/  — установщик
+lib/main.dart  — точка входа
+lib/core/      — логика хеширования, парсинг эталона, утилиты
+lib/ui/        — Flutter-интерфейс
+windows/       — Windows runner
+linux/         — Linux runner
+assets/        — ресурсы
+packaging/     — файлы упаковки
 ```
 
 ## Планы
 
-- Добавить Linux сборку в Releases
-    
 - Улучшить UI
     
 - Поддержка drag & drop
