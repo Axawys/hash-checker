@@ -78,23 +78,27 @@ flutter build linux --release
 build/linux/x64/release/bundle/
 ```
 
-Для RPM-релиза используется `fpm`. Пример упаковки:
+Для контейнерной сборки Linux-пакетов используется Docker или Podman. По умолчанию
+скрипты выбирают `docker`, если он установлен, иначе пробуют `podman`.
 
 ```bash
-fpm -s dir -t rpm \
-  -n hashchecker \
-  -v 2.0.0 \
-  --iteration 1 \
-  -a x86_64 \
-  --description "File hash checker" \
-  --url https://github.com/Axawys/hash-checker \
-  --license MIT \
-  --maintainer Axawys \
-  --depends gtk3 \
-  -C /path/to/package-root \
-  -p dist/hashchecker-2.0.0-1.x86_64.rpm \
-  .
+./packaging/linux/deb/build-deb.sh
+./packaging/linux/rpm/build-rpm.sh
 ```
+
+Или оба пакета сразу:
+
+```bash
+./packaging/linux/build-all.sh
+```
+
+Чтобы явно выбрать Docker:
+
+```bash
+CONTAINER_ENGINE=docker ./packaging/linux/build-all.sh
+```
+
+Готовые пакеты складываются в `dist/`.
 
 ### Сборка Windows
 
