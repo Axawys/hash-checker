@@ -5,3 +5,4 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 "$repo_root/packaging/linux/deb/build-deb.sh"
 "$repo_root/packaging/linux/rpm/build-rpm.sh"
+"$repo_root/packaging/linux/tar/build-tar.sh"

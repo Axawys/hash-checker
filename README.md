@@ -11,53 +11,96 @@
   <img src="https://img.shields.io/badge/flutter-%2302569B.svg?style=flat&logo=flutter&logoColor=white" alt="Flutter Logo">
 </p>
 
-Кроссплатформенная утилита для проверки контрольных сумм файлов.  
-Поддерживает MD5, SHA-1, SHA-256, SHA-512.
+HashChecker — простая кроссплатформенная утилита для проверки контрольных сумм файлов.
+Приложение помогает сравнить рассчитанный хеш файла с эталонным значением и быстро
+понять, совпадает ли файл с ожидаемой версией.
+
+Поддерживаемые алгоритмы: MD5, SHA-1, SHA-256 и SHA-512.
 
 ## О проекте
 
-Изначально проект был написан на Python + GTK4 (только для Linux).  
-Начиная с версии 2.0.0 полностью переписан на Flutter.
+Изначально HashChecker был написан на Python + GTK4 и работал только на Linux.
+Начиная с версии 2.0.0 проект полностью переписан на Flutter.
 
-Это дало:
-- единый код для всех платформ
-- поддержку Windows и Linux
-- упрощение разработки и поддержки
+Это позволило:
+- использовать единый код для всех платформ
+- добавить поддержку Windows и Linux
+- упростить поддержку интерфейса и сборок
 
 ## Скачать
 
-Актуальные сборки доступны во вкладке Releases.
+Готовые сборки доступны на странице
+[Releases](https://github.com/Axawys/hash-checker/releases).
 
-Windows:
-- HashChecker-Setup.exe
+### Windows
 
-Linux:
-- hashchecker-2.0.0-1.x86_64.rpm
+Скачайте и запустите установщик:
+
+```text
+HashChecker-Setup.exe
+```
+
+### Linux
+
+Доступны пакеты для популярных сценариев установки:
+
+```text
+hashchecker_2.0.0-1_amd64.deb
+hashchecker-2.0.0-1.x86_64.rpm
+hashchecker-2.0.0-linux-x64.tar.gz
+```
+
+DEB подходит для Debian, Ubuntu и совместимых дистрибутивов:
+
+```bash
+sudo apt install ./hashchecker_2.0.0-1_amd64.deb
+```
+
+RPM подходит для Fedora и совместимых дистрибутивов:
+
+```bash
+sudo dnf install ./hashchecker-2.0.0-1.x86_64.rpm
+```
+
+Tar.gz можно запускать без установки:
+
+```bash
+tar -xzf hashchecker-2.0.0-linux-x64.tar.gz
+./hashchecker-2.0.0-linux-x64/hashchecker
+```
+
+Для установки tar.gz-версии в профиль пользователя:
+
+```bash
+./hashchecker-2.0.0-linux-x64/install.sh
+```
 
 ## Возможности
 
-- Проверка хеш-сумм:
-  - MD5
-  - SHA-1
-  - SHA-256
-  - SHA-512
-- Автоматическое определение алгоритма
-- Вставка из буфера обмена
-- Простой интерфейс
+- расчет хеша выбранного файла
+- сравнение с эталонной контрольной суммой
+- автоматическое определение алгоритма по длине хеша
+- поддержка MD5, SHA-1, SHA-256 и SHA-512
+- вставка эталонного значения из буфера обмена
+- нативный выбор файла на Windows и Linux
 
 ## Скриншоты
 
-![screenshot1](assets/screenshots/pic1.png)  
-![screenshot2](assets/screenshots/pic2.png)  
-![screenshot3](assets/screenshots/pic3.png)
+![Main window](assets/screenshots/pic1.png)
+
+![Hash check](assets/screenshots/pic2.png)
+
+![Result](assets/screenshots/pic3.png)
 
 ## Сборка из исходников
 
-Требования:
-- Flutter SDK
+### Требования
 
-Установка:
-https://docs.flutter.dev/get-started/install
+- Flutter SDK
+- Docker для сборки Linux-пакетов
+
+Инструкция по установке Flutter:
+[docs.flutter.dev/get-started/install](https://docs.flutter.dev/get-started/install)
 
 ### Запуск
 
@@ -66,7 +109,13 @@ flutter pub get
 flutter run -d linux
 ```
 
-### Сборка Linux
+Для Windows используйте:
+
+```bash
+flutter run -d windows
+```
+
+### Linux bundle
 
 ```bash
 flutter build linux --release
@@ -78,29 +127,25 @@ flutter build linux --release
 build/linux/x64/release/bundle/
 ```
 
-Для контейнерной сборки Linux-пакетов используется Docker или Podman. По умолчанию
-скрипты выбирают `docker`, если он установлен, иначе пробуют `podman`.
+### Linux-пакеты
+
+Сборка Linux-пакетов выполняется через Docker. Готовые файлы складываются в `dist/`.
+
+Отдельные форматы:
 
 ```bash
 ./packaging/linux/deb/build-deb.sh
 ./packaging/linux/rpm/build-rpm.sh
+./packaging/linux/tar/build-tar.sh
 ```
 
-Или оба пакета сразу:
+Все Linux-пакеты сразу:
 
 ```bash
 ./packaging/linux/build-all.sh
 ```
 
-Чтобы явно выбрать Docker:
-
-```bash
-CONTAINER_ENGINE=docker ./packaging/linux/build-all.sh
-```
-
-Готовые пакеты складываются в `dist/`.
-
-### Сборка Windows
+### Windows
 
 ```bash
 flutter build windows
@@ -109,7 +154,7 @@ flutter build windows
 После этого можно собрать установщик через Inno Setup:
 
 ```powershell
-& "C:\Users\ВАШЕ_ИМЯ_ПОЛЬЗОВАТЕЛЯ\AppData\Local\Programs\Inno Setup 6\ISCC.exe" .\installer.iss
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" .\packaging\windows\installer.iss
 ```
 
 ## Структура проекта
@@ -118,22 +163,19 @@ flutter build windows
 lib/main.dart  — точка входа
 lib/core/      — логика хеширования, парсинг эталона, утилиты
 lib/ui/        — Flutter-интерфейс
-windows/       — Windows runner
-linux/         — Linux runner
 assets/        — ресурсы
+linux/         — Linux runner
 packaging/     — файлы упаковки
+windows/       — Windows runner
 ```
 
 ## Планы
 
 - Улучшить UI
-    
 - Поддержка drag & drop
-    
 - CLI-режим
-    
 
 ## Лицензия
 
-Проект распространяется под лицензией MIT.  
+Проект распространяется под лицензией MIT.
 Подробнее см. файл [LICENSE](LICENSE).

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-image_name="${IMAGE_NAME:-hashchecker-deb-builder:ubuntu-24.04}"
+image_name="${IMAGE_NAME:-hashchecker-tar-builder:ubuntu-24.04}"
 user_args=(--user "$(id -u):$(id -g)")
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -11,7 +11,7 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 docker build \
-  -f "$repo_root/packaging/linux/deb/Dockerfile" \
+  -f "$repo_root/packaging/linux/tar/Dockerfile" \
   -t "$image_name" \
   "$repo_root"
 
@@ -23,4 +23,4 @@ docker run --rm \
   -v "$repo_root:/work" \
   -w /work \
   "$image_name" \
-  bash packaging/linux/deb/package-in-container.sh
+  bash packaging/linux/tar/package-in-container.sh
