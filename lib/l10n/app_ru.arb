@@ -1,0 +1,48 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Hash Checker",
+  "selectFileForCheckDialog": "Выберите файл для проверки",
+  "selectHashFileDialog": "Выберите файл с хешем",
+  "invalidHashFormat": "Неверный формат хеша",
+  "readFileError": "Ошибка чтения файла",
+  "openFileDialogError": "Не удалось открыть системный диалог выбора файла.",
+  "fromClipboard": "Из буфера",
+  "algorithmChanged": "Алгоритм изменен на {algorithm}",
+  "@algorithmChanged": {
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      }
+    }
+  },
+  "hashesMatchTitle": "Суммы совпали",
+  "hashesMatchDescription": "Целостность данных подтверждена ({algorithm})",
+  "@hashesMatchDescription": {
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      }
+    }
+  },
+  "hashesDifferTitle": "Суммы различаются!",
+  "hashesDifferDescription": "Данные не совпадают с эталоном",
+  "chooseFilePlaceholder": "Выберите файл...",
+  "hashingStatus": "Вычисляю {algorithm}...",
+  "@hashingStatus": {
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      }
+    }
+  },
+  "hashReferencePlaceholder": "Файл или вставка (sha256:...)",
+  "settingsSection": "Настройки",
+  "hashAlgorithmLabel": "Алгоритм хеширования",
+  "verificationDataSection": "Данные для сверки",
+  "fileForCheckTitle": "Файл для проверки",
+  "chooseFileTooltip": "Выбрать файл",
+  "referenceHashTitle": "Эталонный хеш",
+  "pasteFromClipboardTooltip": "Вставить из буфера",
+  "chooseHashFileTooltip": "Выбрать файл с хешем",
+  "verifyButton": "Сверить хеш-суммы"
+}

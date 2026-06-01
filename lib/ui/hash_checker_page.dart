@@ -8,6 +8,7 @@ import '../core/hash_algorithms.dart';
 import '../core/hash_reference.dart';
 import '../core/hash_service.dart';
 import '../core/path_utils.dart';
+import '../l10n/app_localizations.dart';
 
 class HashCheckerPage extends StatefulWidget {
   const HashCheckerPage({super.key});
@@ -35,6 +36,8 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
   String resultTitle = '';
   String resultDescription = '';
 
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
+
   bool get canVerify {
     final hasRef = (manualHash?.isNotEmpty ?? false) || (hashPath?.isNotEmpty ?? false);
     return filePath != null && calculatedHash != null && hasRef;
@@ -56,7 +59,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     if (isDialogOpen) return;
     isDialogOpen = true;
     try {
-      final result = await pickSingleFile('Выберите файл для проверки');
+      final result = await pickSingleFile(l10n.selectFileForCheckDialog);
       if (result != null) {
         filePath = result.path;
         await startHashing(filePath!);
@@ -70,7 +73,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     if (isDialogOpen) return;
     isDialogOpen = true;
     try {
-      final result = await pickSingleFile('Выберите файл с хешем');
+      final result = await pickSingleFile(l10n.selectHashFileDialog);
       if (result != null) {
         hashPath = result.path;
         try {
@@ -83,7 +86,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
             });
           }
         } catch (_) {
-          showToast('Ошибка чтения файла');
+          showToast(l10n.readFileError);
         }
       }
     } finally {
@@ -95,16 +98,16 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     try {
       return await openFile(confirmButtonText: confirmButtonText);
     } catch (_) {
-      showToast('Не удалось открыть системный диалог выбора файла.');
+      showToast(l10n.openFileDialogError);
       return null;
     }
   }
 
   Future<void> pasteHash() async {
     final text = await Clipboard.getData(Clipboard.kTextPlain);
-    final ok = processHashInput(text?.text, 'Из буфера');
+    final ok = processHashInput(text?.text, l10n.fromClipboard);
     if (!ok) {
-      showToast('Неверный формат хеша');
+      showToast(l10n.invalidHashFormat);
     }
   }
 
@@ -115,7 +118,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     String? toastMessage;
     if (reference.detectedAlgorithm != null && selectedAlgo != reference.detectedAlgorithm) {
       selectedAlgo = reference.detectedAlgorithm!;
-      toastMessage = 'Алгоритм изменен на ${reference.detectedAlgorithm}';
+      toastMessage = l10n.algorithmChanged(reference.detectedAlgorithm!);
     }
 
     setState(() {
@@ -164,7 +167,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
         isHashing = false;
         fileDone = false;
       });
-      showToast('Ошибка чтения файла');
+      showToast(l10n.readFileError);
     }
   }
 
@@ -176,7 +179,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
         final content = await hashService.readTextFile(hashPath!);
         expected = parseHashReference(content, basename(hashPath!))?.hash;
       } catch (_) {
-        showToast('Ошибка чтения файла');
+        showToast(l10n.readFileError);
         return;
       }
     }
@@ -188,12 +191,12 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     setState(() {
       if (hashService.hashesMatch(calculatedHash!, expected!)) {
         resultState = ResultState.success;
-        resultTitle = 'Суммы совпали';
-        resultDescription = 'Целостность данных подтверждена ($selectedAlgo)';
+        resultTitle = l10n.hashesMatchTitle;
+        resultDescription = l10n.hashesMatchDescription(selectedAlgo);
       } else {
         resultState = ResultState.error;
-        resultTitle = 'Суммы различаются!';
-        resultDescription = 'Данные не совпадают с эталоном';
+        resultTitle = l10n.hashesDifferTitle;
+        resultDescription = l10n.hashesDifferDescription;
       }
     });
   }
@@ -201,14 +204,14 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
   String? _hashSubtitleOverride;
 
   String get fileSubtitle {
-    if (filePath == null) return 'Выберите файл...';
-    if (isHashing) return 'Вычисляю $selectedAlgo...';
+    if (filePath == null) return l10n.chooseFilePlaceholder;
+    if (isHashing) return l10n.hashingStatus(selectedAlgo);
     return basename(filePath!);
   }
 
   String get hashSubtitle {
     if (_hashSubtitleOverride != null) return _hashSubtitleOverride!;
-    return 'Файл или вставка (sha256:...)';
+    return l10n.hashReferencePlaceholder;
   }
 
   @override
@@ -217,7 +220,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hash Checker'),
+        title: Text(l10n.appTitle),
         centerTitle: false,
       ),
       body: SafeArea(
@@ -230,11 +233,11 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _SectionCard(
-                    title: 'Настройки',
+                    title: l10n.settingsSection,
                     child: DropdownButtonFormField<String>(
                       initialValue: selectedAlgo,
-                      decoration: const InputDecoration(
-                        labelText: 'Алгоритм хеширования',
+                      decoration: InputDecoration(
+                        labelText: l10n.hashAlgorithmLabel,
                         border: OutlineInputBorder(),
                       ),
                       items: availableAlgos
@@ -253,12 +256,12 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                   ),
                   const SizedBox(height: 18),
                   _SectionCard(
-                    title: 'Данные для сверки',
+                    title: l10n.verificationDataSection,
                     child: Column(
                       children: [
                         _ActionTile(
                           icon: Icons.insert_drive_file_outlined,
-                          title: 'Файл для проверки',
+                          title: l10n.fileForCheckTitle,
                           subtitle: fileSubtitle,
                           trailing: Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
@@ -274,7 +277,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                               if (fileDone)
                                 Icon(Icons.check_circle, color: scheme.primary),
                               IconButton(
-                                tooltip: 'Выбрать файл',
+                                tooltip: l10n.chooseFileTooltip,
                                 onPressed: pickFileForCheck,
                                 icon: const Icon(Icons.folder_open),
                               ),
@@ -284,18 +287,18 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                         const SizedBox(height: 12),
                         _ActionTile(
                           icon: Icons.paste_outlined,
-                          title: 'Эталонный хеш',
+                          title: l10n.referenceHashTitle,
                           subtitle: hashSubtitle,
                           trailing: Wrap(
                             spacing: 4,
                             children: [
                               IconButton(
-                                tooltip: 'Вставить из буфера',
+                                tooltip: l10n.pasteFromClipboardTooltip,
                                 onPressed: pasteHash,
                                 icon: const Icon(Icons.content_paste),
                               ),
                               IconButton(
-                                tooltip: 'Выбрать файл с хешем',
+                                tooltip: l10n.chooseHashFileTooltip,
                                 onPressed: pickHashFile,
                                 icon: const Icon(Icons.folder_open),
                               ),
@@ -312,7 +315,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(220, 48),
                       ),
-                      child: const Text('Сверить хеш-суммы'),
+                      child: Text(l10n.verifyButton),
                     ),
                   ),
                   const SizedBox(height: 18),

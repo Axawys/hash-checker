@@ -1,0 +1,48 @@
+{
+  "@@locale": "en",
+  "appTitle": "Hash Checker",
+  "selectFileForCheckDialog": "Select file to check",
+  "selectHashFileDialog": "Select hash file",
+  "invalidHashFormat": "Invalid hash format",
+  "readFileError": "File read error",
+  "openFileDialogError": "Could not open the system file picker.",
+  "fromClipboard": "From clipboard",
+  "algorithmChanged": "Algorithm changed to {algorithm}",
+  "@algorithmChanged": {
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      }
+    }
+  },
+  "hashesMatchTitle": "Hashes match",
+  "hashesMatchDescription": "Data integrity confirmed ({algorithm})",
+  "@hashesMatchDescription": {
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      }
+    }
+  },
+  "hashesDifferTitle": "Hashes differ!",
+  "hashesDifferDescription": "The data does not match the reference",
+  "chooseFilePlaceholder": "Choose a file...",
+  "hashingStatus": "Calculating {algorithm}...",
+  "@hashingStatus": {
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      }
+    }
+  },
+  "hashReferencePlaceholder": "File or paste (sha256:...)",
+  "settingsSection": "Settings",
+  "hashAlgorithmLabel": "Hash algorithm",
+  "verificationDataSection": "Verification data",
+  "fileForCheckTitle": "File to check",
+  "chooseFileTooltip": "Choose file",
+  "referenceHashTitle": "Reference hash",
+  "pasteFromClipboardTooltip": "Paste from clipboard",
+  "chooseHashFileTooltip": "Choose hash file",
+  "verifyButton": "Compare hashes"
+}
