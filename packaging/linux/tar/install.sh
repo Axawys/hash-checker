@@ -7,8 +7,11 @@ install_dir="$data_home/hashchecker"
 bin_dir="$HOME/.local/bin"
 apps_dir="$data_home/applications"
 icons_dir="$data_home/icons/hicolor/256x256/apps"
-desktop_file="$apps_dir/hashchecker.desktop"
-icon_file="$icons_dir/hashchecker.png"
+desktop_id="io.github.axawys.HashChecker"
+desktop_file="$apps_dir/$desktop_id.desktop"
+icon_file="$icons_dir/$desktop_id.png"
+legacy_desktop_file="$apps_dir/hashchecker.desktop"
+legacy_icon_file="$icons_dir/hashchecker.png"
 
 mkdir -p "$install_dir" "$bin_dir" "$apps_dir" "$icons_dir"
 
@@ -24,7 +27,8 @@ chmod 755 "$install_dir/lib/hashchecker/lib/libfile_selector_linux_plugin.so"
 chmod 755 "$install_dir/lib/hashchecker/lib/libflutter_linux_gtk.so"
 
 ln -sfn "$install_dir/hashchecker" "$bin_dir/hashchecker"
-cp "$install_dir/share/icons/hicolor/256x256/apps/hashchecker.png" "$icon_file"
+cp "$install_dir/share/icons/hicolor/256x256/apps/$desktop_id.png" "$icon_file"
+cp "$install_dir/share/icons/hicolor/256x256/apps/hashchecker.png" "$legacy_icon_file"
 
 cat > "$desktop_file" <<EOF
 [Desktop Entry]
@@ -35,9 +39,11 @@ Exec=$install_dir/hashchecker
 Icon=$icon_file
 Terminal=false
 Categories=Utility;
+StartupWMClass=$desktop_id
 EOF
 
-chmod 644 "$desktop_file" "$icon_file"
+rm -f "$legacy_desktop_file"
+chmod 644 "$desktop_file" "$icon_file" "$legacy_icon_file"
 
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database "$apps_dir" >/dev/null 2>&1 || true

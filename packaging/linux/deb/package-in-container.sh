@@ -11,6 +11,7 @@ fi
 package_root="/tmp/hashchecker-deb-root"
 bundle_dir="build/linux/x64/release/bundle"
 package_path="dist/hashchecker_${app_version}-${build_number}_amd64.deb"
+desktop_id="io.github.axawys.HashChecker"
 
 git config --global --add safe.directory /opt/flutter
 
@@ -26,7 +27,8 @@ mkdir -p "$package_root/usr/share/icons/hicolor/256x256/apps"
 mkdir -p dist
 
 cp -a "$bundle_dir/." "$package_root/usr/lib/hashchecker/"
-cp packaging/linux/deb/hashchecker.desktop "$package_root/usr/share/applications/hashchecker.desktop"
+cp packaging/linux/deb/hashchecker.desktop "$package_root/usr/share/applications/$desktop_id.desktop"
+cp assets/icon.png "$package_root/usr/share/icons/hicolor/256x256/apps/$desktop_id.png"
 cp assets/icon.png "$package_root/usr/share/icons/hicolor/256x256/apps/hashchecker.png"
 ln -s /usr/lib/hashchecker/hashchecker "$package_root/usr/bin/hashchecker"
 
@@ -34,10 +36,11 @@ chmod 755 "$package_root/usr/lib/hashchecker/hashchecker"
 chmod 755 "$package_root/usr/lib/hashchecker/lib/libapp.so"
 chmod 755 "$package_root/usr/lib/hashchecker/lib/libfile_selector_linux_plugin.so"
 chmod 755 "$package_root/usr/lib/hashchecker/lib/libflutter_linux_gtk.so"
-chmod 644 "$package_root/usr/share/applications/hashchecker.desktop"
+chmod 644 "$package_root/usr/share/applications/$desktop_id.desktop"
+chmod 644 "$package_root/usr/share/icons/hicolor/256x256/apps/$desktop_id.png"
 chmod 644 "$package_root/usr/share/icons/hicolor/256x256/apps/hashchecker.png"
 
-desktop-file-validate "$package_root/usr/share/applications/hashchecker.desktop"
+desktop-file-validate "$package_root/usr/share/applications/$desktop_id.desktop"
 
 rm -f "$package_path"
 
