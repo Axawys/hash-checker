@@ -42,21 +42,12 @@ HashChecker — простая кроссплатформенная утилит
 
 Доступны пакеты для популярных сценариев установки:
 
-- [hashchecker_2.0.0-1_amd64.deb](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker_2.0.0-1_amd64.deb)
-- [hashchecker-2.0.0-1.x86_64.rpm](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.0.0-1.x86_64.rpm)
-- [hashchecker-2.0.0-linux-x64.tar.gz](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.0.0-linux-x64.tar.gz)
+- [hashchecker_2.1.0_amd64.deb](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker_2.1.0_amd64.deb)
+- [hashchecker-2.1.0.x86_64.rpm](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.1.0.x86_64.rpm)
+- [hashchecker-2.0.0-linux-x64.tar.gz](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.1.0-linux-x64.tar.gz)
 
-DEB подходит для Debian, Ubuntu и совместимых дистрибутивов:
-
-```bash
-sudo apt install ./hashchecker_2.0.0-1_amd64.deb
-```
-
-RPM подходит для Fedora и совместимых дистрибутивов:
-
-```bash
-sudo dnf install ./hashchecker-2.0.0-1.x86_64.rpm
-```
+DEB подходит для Debian, Ubuntu и совместимых дистрибутивов
+RPM подходит для Fedora и совместимых
 
 Tar.gz можно запускать без установки:
 
@@ -166,10 +157,7 @@ packaging/     — файлы упаковки
 windows/       — Windows runner
 ```
 
-## Планы
-
-- Улучшить UI
-- Поддержка drag & drop
+## Планы:
 - CLI-режим
 
 ## Лицензия
