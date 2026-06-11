@@ -36,15 +36,15 @@ HashChecker — простая кроссплатформенная утилит
 
 Скачайте и запустите установщик:
 
-[HashChecker-Setup.exe](https://github.com/Axawys/hash-checker/releases/download/v2.0.0/HashChecker-Setup.exe)
+[HashChecker-Setup.exe](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/HashChecker-Setup.exe)
 
 ### Linux
 
 Доступны пакеты для популярных сценариев установки:
 
-- [hashchecker_2.0.0-1_amd64.deb](https://github.com/Axawys/hash-checker/releases/download/v2.0.0/hashchecker_2.0.0-1_amd64.deb)
-- [hashchecker-2.0.0-1.x86_64.rpm](https://github.com/Axawys/hash-checker/releases/download/v2.0.0/hashchecker-2.0.0-1.x86_64.rpm)
-- [hashchecker-2.0.0-linux-x64.tar.gz](https://github.com/Axawys/hash-checker/releases/download/v2.0.0/hashchecker-2.0.0-linux-x64.tar.gz)
+- [hashchecker_2.0.0-1_amd64.deb](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker_2.0.0-1_amd64.deb)
+- [hashchecker-2.0.0-1.x86_64.rpm](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.0.0-1.x86_64.rpm)
+- [hashchecker-2.0.0-linux-x64.tar.gz](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.0.0-linux-x64.tar.gz)
 
 DEB подходит для Debian, Ubuntu и совместимых дистрибутивов:
 
