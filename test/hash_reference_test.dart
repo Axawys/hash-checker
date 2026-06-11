@@ -20,6 +20,13 @@ void main() {
     expect(reference?.detectedAlgorithm, isNull);
   });
 
+  test('detects algorithm by hash length', () {
+    final reference = parseHashReference('a' * 64, 'Clipboard');
+
+    expect(reference?.hash, 'a' * 64);
+    expect(reference?.detectedAlgorithm, 'SHA-256');
+  });
+
   test('rejects short values', () {
     expect(parseHashReference('abc123', 'Буфер'), isNull);
   });

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,10 +28,19 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
   String? hashPath;
   String? manualHash;
   String? calculatedHash;
+  String? calculatedForFilePath;
+  String? calculatedForAlgorithm;
+
+  StreamSubscription<HashProgressEvent>? hashSubscription;
+  int hashTaskId = 0;
+  double hashProgress = 0;
+  Duration estimatedRemaining = Duration.zero;
 
   bool isHashing = false;
   bool fileDone = false;
   bool isDialogOpen = false;
+  bool isFileDropActive = false;
+  bool isHashDropActive = false;
 
   ResultState resultState = ResultState.hidden;
   String resultTitle = '';
@@ -41,6 +51,12 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
   bool get canVerify {
     final hasRef = (manualHash?.isNotEmpty ?? false) || (hashPath?.isNotEmpty ?? false);
     return filePath != null && calculatedHash != null && hasRef;
+  }
+
+  @override
+  void dispose() {
+    unawaited(hashSubscription?.cancel());
+    super.dispose();
   }
 
   void showToast(String message) {
@@ -61,8 +77,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     try {
       final result = await pickSingleFile(l10n.selectFileForCheckDialog);
       if (result != null) {
-        filePath = result.path;
-        await startHashing(filePath!);
+        await setFileForCheck(result.path);
       }
     } finally {
       isDialogOpen = false;
@@ -75,23 +90,48 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     try {
       final result = await pickSingleFile(l10n.selectHashFileDialog);
       if (result != null) {
-        hashPath = result.path;
-        try {
-          final content = await hashService.readTextFile(hashPath!);
-          final ok = processHashInput(content.trim(), basename(hashPath!));
-          if (!ok) {
-            setState(() {
-              manualHash = null;
-              resultState = ResultState.hidden;
-            });
-          }
-        } catch (_) {
-          showToast(l10n.readFileError);
-        }
+        await setHashFile(result.path);
       }
     } finally {
       isDialogOpen = false;
     }
+  }
+
+  Future<void> setFileForCheck(String path) async {
+    filePath = path;
+    await startHashing(path, force: true);
+  }
+
+  Future<void> setHashFile(String path) async {
+    hashPath = path;
+    try {
+      final content = await hashService.readTextFile(path);
+      final ok = processHashInput(content.trim(), basename(path));
+      if (!ok) {
+        setState(() {
+          manualHash = null;
+          resultState = ResultState.hidden;
+        });
+      }
+    } catch (_) {
+      showToast(l10n.readFileError);
+    }
+  }
+
+  Future<void> handleDroppedFileForCheck(List<XFile> files) async {
+    if (files.isEmpty) return;
+    setState(() {
+      isFileDropActive = false;
+    });
+    await setFileForCheck(files.first.path);
+  }
+
+  Future<void> handleDroppedHashFile(List<XFile> files) async {
+    if (files.isEmpty) return;
+    setState(() {
+      isHashDropActive = false;
+    });
+    await setHashFile(files.first.path);
   }
 
   Future<XFile?> pickSingleFile(String confirmButtonText) async {
@@ -116,9 +156,11 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     if (reference == null) return false;
 
     String? toastMessage;
+    var shouldRehash = false;
     if (reference.detectedAlgorithm != null && selectedAlgo != reference.detectedAlgorithm) {
       selectedAlgo = reference.detectedAlgorithm!;
       toastMessage = l10n.algorithmChanged(reference.detectedAlgorithm!);
+      shouldRehash = filePath != null;
     }
 
     setState(() {
@@ -131,44 +173,120 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) => showToast(toastMessage!));
     }
 
-    if (filePath != null) {
+    if (shouldRehash && filePath != null) {
       unawaited(startHashing(filePath!));
     }
 
     return true;
   }
 
-  Future<void> startHashing(String path) async {
+  Future<void> startHashing(String path, {bool force = false}) async {
     final algo = selectedAlgo;
+    if (!force && calculatedForFilePath == path && calculatedForAlgorithm == algo) {
+      return;
+    }
+
+    await hashSubscription?.cancel();
+    final taskId = ++hashTaskId;
 
     setState(() {
       calculatedHash = null;
+      calculatedForFilePath = null;
+      calculatedForAlgorithm = null;
+      hashProgress = 0;
+      estimatedRemaining = Duration.zero;
       isHashing = true;
       fileDone = false;
       resultState = ResultState.hidden;
     });
 
-    try {
-      final result = await hashService.computeFileHash(path, algo);
+    hashSubscription = hashService.computeFileHashWithProgress(path, algo).listen(
+      (event) {
+        if (!mounted || taskId != hashTaskId || path != filePath || algo != selectedAlgo) {
+          return;
+        }
+        switch (event) {
+          case HashProgress():
+            setState(() {
+              hashProgress = event.fraction;
+              estimatedRemaining = event.estimatedRemaining;
+            });
+          case HashCompleted():
+            setState(() {
+              calculatedHash = event.hash;
+              calculatedForFilePath = path;
+              calculatedForAlgorithm = algo;
+              hashProgress = 1;
+              estimatedRemaining = Duration.zero;
+              isHashing = false;
+              fileDone = true;
+            });
+        }
+      },
+      onError: (_, _) {
+        if (!mounted || taskId != hashTaskId || path != filePath) return;
+        setState(() {
+          isHashing = false;
+          fileDone = false;
+          hashProgress = 0;
+          estimatedRemaining = Duration.zero;
+        });
+        showToast(l10n.readFileError);
+      },
+    );
+  }
 
-      if (!mounted) return;
-      if (path != filePath || algo != selectedAlgo) return;
+  Future<void> copyCalculatedHash() async {
+    final hash = calculatedHash;
+    if (hash == null) return;
+    await Clipboard.setData(ClipboardData(text: hash));
+    showToast(l10n.hashCopied);
+  }
 
-      setState(() {
-        calculatedHash = result;
-        isHashing = false;
-        fileDone = true;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      if (path != filePath) return;
-
-      setState(() {
-        isHashing = false;
-        fileDone = false;
-      });
-      showToast(l10n.readFileError);
+  Future<void> changeAlgorithm(String value) async {
+    if (value == selectedAlgo) return;
+    setState(() {
+      selectedAlgo = value;
+    });
+    if (filePath != null) {
+      await startHashing(filePath!);
     }
+  }
+
+  void showHelp() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => _HelpDialog(
+        title: l10n.helpTitle,
+        overview: l10n.helpOverview,
+        stepsTitle: l10n.helpStepsTitle,
+        steps: [
+          l10n.helpStepChooseFile,
+          l10n.helpStepReferenceHash,
+          l10n.helpStepAlgorithm,
+          l10n.helpStepCompare,
+        ],
+        featuresTitle: l10n.helpFeaturesTitle,
+        features: [
+          l10n.helpFeatureDragDrop,
+          l10n.helpFeatureProgress,
+          l10n.helpFeatureCopyHash,
+        ],
+        closeLabel: l10n.closeButton,
+      ),
+    );
+  }
+
+  String formatRemainingTime(Duration duration) {
+    if (duration.inMilliseconds <= 0) return l10n.lessThanSecond;
+    if (duration.inSeconds < 1) return l10n.lessThanSecond;
+    if (duration.inMinutes < 1) return l10n.secondsShort(duration.inSeconds);
+    return l10n.minutesSecondsShort(duration.inMinutes, duration.inSeconds % 60);
+  }
+
+  String get progressText {
+    final percent = (hashProgress * 100).clamp(0, 100).round();
+    return l10n.hashProgress(percent, formatRemainingTime(estimatedRemaining));
   }
 
   Future<void> verifyHashes() async {
@@ -220,8 +338,14 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle),
-        centerTitle: false,
+        actions: [
+          IconButton(
+            tooltip: l10n.helpTooltip,
+            onPressed: showHelp,
+            icon: const Icon(Icons.help_outline),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -245,12 +369,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        setState(() {
-                          selectedAlgo = value;
-                        });
-                        if (filePath != null) {
-                          unawaited(startHashing(filePath!));
-                        }
+                        unawaited(changeAlgorithm(value));
                       },
                     ),
                   ),
@@ -259,52 +378,80 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                     title: l10n.verificationDataSection,
                     child: Column(
                       children: [
-                        _ActionTile(
-                          icon: Icons.insert_drive_file_outlined,
-                          title: l10n.fileForCheckTitle,
-                          subtitle: fileSubtitle,
-                          trailing: Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 8,
-                            children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: isHashing
-                                    ? const CircularProgressIndicator(strokeWidth: 2)
-                                    : const SizedBox.shrink(),
-                              ),
-                              if (fileDone)
-                                Icon(Icons.check_circle, color: scheme.primary),
-                              IconButton(
-                                tooltip: l10n.chooseFileTooltip,
-                                onPressed: pickFileForCheck,
-                                icon: const Icon(Icons.folder_open),
-                              ),
-                            ],
+                        DropTarget(
+                          onDragDone: (detail) => unawaited(handleDroppedFileForCheck(detail.files)),
+                          onDragEntered: (_) => setState(() => isFileDropActive = true),
+                          onDragExited: (_) => setState(() => isFileDropActive = false),
+                          child: _ActionTile(
+                            icon: Icons.insert_drive_file_outlined,
+                            title: l10n.fileForCheckTitle,
+                            subtitle: isFileDropActive ? l10n.dropFileForCheck : fileSubtitle,
+                            highlighted: isFileDropActive,
+                            trailing: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: isHashing
+                                      ? const CircularProgressIndicator(strokeWidth: 2)
+                                      : const SizedBox.shrink(),
+                                ),
+                                if (fileDone)
+                                  Icon(Icons.check_circle, color: scheme.primary),
+                                IconButton(
+                                  tooltip: l10n.chooseFileTooltip,
+                                  onPressed: pickFileForCheck,
+                                  icon: const Icon(Icons.folder_open),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        _ActionTile(
-                          icon: Icons.paste_outlined,
-                          title: l10n.referenceHashTitle,
-                          subtitle: hashSubtitle,
-                          trailing: Wrap(
-                            spacing: 4,
-                            children: [
-                              IconButton(
-                                tooltip: l10n.pasteFromClipboardTooltip,
-                                onPressed: pasteHash,
-                                icon: const Icon(Icons.content_paste),
-                              ),
-                              IconButton(
-                                tooltip: l10n.chooseHashFileTooltip,
-                                onPressed: pickHashFile,
-                                icon: const Icon(Icons.folder_open),
-                              ),
-                            ],
+                        DropTarget(
+                          onDragDone: (detail) => unawaited(handleDroppedHashFile(detail.files)),
+                          onDragEntered: (_) => setState(() => isHashDropActive = true),
+                          onDragExited: (_) => setState(() => isHashDropActive = false),
+                          child: _ActionTile(
+                            icon: Icons.paste_outlined,
+                            title: l10n.referenceHashTitle,
+                            subtitle: isHashDropActive ? l10n.dropHashFile : hashSubtitle,
+                            highlighted: isHashDropActive,
+                            trailing: Wrap(
+                              spacing: 4,
+                              children: [
+                                IconButton(
+                                  tooltip: l10n.pasteFromClipboardTooltip,
+                                  onPressed: pasteHash,
+                                  icon: const Icon(Icons.content_paste),
+                                ),
+                                IconButton(
+                                  tooltip: l10n.chooseHashFileTooltip,
+                                  onPressed: pickHashFile,
+                                  icon: const Icon(Icons.folder_open),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                        if (isHashing) ...[
+                          const SizedBox(height: 16),
+                          _HashProgressView(
+                            progress: hashProgress,
+                            label: progressText,
+                          ),
+                        ],
+                        if (calculatedHash != null) ...[
+                          const SizedBox(height: 16),
+                          _CalculatedHashCard(
+                            title: l10n.calculatedHashTitle,
+                            hash: calculatedHash!,
+                            copyTooltip: l10n.copyHashTooltip,
+                            onCopy: copyCalculatedHash,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -331,6 +478,96 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HelpDialog extends StatelessWidget {
+  const _HelpDialog({
+    required this.title,
+    required this.overview,
+    required this.stepsTitle,
+    required this.steps,
+    required this.featuresTitle,
+    required this.features,
+    required this.closeLabel,
+  });
+
+  final String title;
+  final String overview;
+  final String stepsTitle;
+  final List<String> steps;
+  final String featuresTitle;
+  final List<String> features;
+  final String closeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(title),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(overview),
+              const SizedBox(height: 18),
+              _HelpSection(title: stepsTitle, items: steps),
+              const SizedBox(height: 16),
+              _HelpSection(title: featuresTitle, items: features),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(closeLabel),
+        ),
+      ],
+    );
+  }
+}
+
+class _HelpSection extends StatelessWidget {
+  const _HelpSection({
+    required this.title,
+    required this.items,
+  });
+
+  final String title;
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: Icon(
+                    Icons.circle,
+                    size: 6,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(item)),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -367,18 +604,25 @@ class _ActionTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.trailing,
+    this.highlighted = false,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final Widget trailing;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        color: highlighted ? scheme.primaryContainer.withValues(alpha: 0.45) : null,
+        border: Border.all(
+          color: highlighted ? scheme.primary : scheme.outlineVariant,
+          width: highlighted ? 2 : 1,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -405,6 +649,85 @@ class _ActionTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           trailing,
+        ],
+      ),
+    );
+  }
+}
+
+class _HashProgressView extends StatelessWidget {
+  const _HashProgressView({
+    required this.progress,
+    required this.label,
+  });
+
+  final double progress;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LinearProgressIndicator(value: progress <= 0 ? null : progress),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
+
+class _CalculatedHashCard extends StatelessWidget {
+  const _CalculatedHashCard({
+    required this.title,
+    required this.hash,
+    required this.copyTooltip,
+    required this.onCopy,
+  });
+
+  final String title;
+  final String hash;
+  final String copyTooltip;
+  final VoidCallback onCopy;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+              ),
+              IconButton(
+                tooltip: copyTooltip,
+                onPressed: onCopy,
+                icon: const Icon(Icons.copy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SelectableText(
+            hash,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
         ],
       ),
     );

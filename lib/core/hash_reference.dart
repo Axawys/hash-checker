@@ -40,6 +40,7 @@ HashReference? parseHashReference(String? rawText, String sourceDisplayName) {
   hash = hash.split(RegExp(r'\s+')).first.toLowerCase();
 
   if (hash.length < 8) return null;
+  detectedAlgorithm ??= detectHashAlgorithmByHashLength(hash);
 
   return HashReference(
     hash: hash,

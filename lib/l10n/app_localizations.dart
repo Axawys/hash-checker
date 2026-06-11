@@ -241,6 +241,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compare hashes'**
   String get verifyButton;
+
+  /// No description provided for @helpTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get helpTooltip;
+
+  /// No description provided for @helpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use'**
+  String get helpTitle;
+
+  /// No description provided for @helpOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'HashChecker helps verify whether the selected file hash matches a trusted reference hash.'**
+  String get helpOverview;
+
+  /// No description provided for @helpStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic workflow'**
+  String get helpStepsTitle;
+
+  /// No description provided for @helpStepChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the file to check with the folder button or drop it onto the file area.'**
+  String get helpStepChooseFile;
+
+  /// No description provided for @helpStepReferenceHash.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the reference hash from the clipboard or choose a file that contains the hash.'**
+  String get helpStepReferenceHash;
+
+  /// No description provided for @helpStepAlgorithm.
+  ///
+  /// In en, this message translates to:
+  /// **'When the algorithm can be detected from the reference hash, the app selects it automatically. You can also choose it manually.'**
+  String get helpStepAlgorithm;
+
+  /// No description provided for @helpStepCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'After calculation, press the compare button to see the verification result.'**
+  String get helpStepCompare;
+
+  /// No description provided for @helpFeaturesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get helpFeaturesTitle;
+
+  /// No description provided for @helpFeatureDragDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Files can be added with drag and drop: one area for the checked file and one for the reference hash file.'**
+  String get helpFeatureDragDrop;
+
+  /// No description provided for @helpFeatureProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress and estimated remaining time are shown during calculation.'**
+  String get helpFeatureProgress;
+
+  /// No description provided for @helpFeatureCopyHash.
+  ///
+  /// In en, this message translates to:
+  /// **'The calculated hash is shown in full and can be selected or copied with a button.'**
+  String get helpFeatureCopyHash;
+
+  /// No description provided for @closeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get closeButton;
+
+  /// No description provided for @calculatedHashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated hash'**
+  String get calculatedHashTitle;
+
+  /// No description provided for @copyHashTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy hash'**
+  String get copyHashTooltip;
+
+  /// No description provided for @hashCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Hash copied'**
+  String get hashCopied;
+
+  /// No description provided for @hashProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% · about {time} remaining'**
+  String hashProgress(int percent, String time);
+
+  /// No description provided for @dropFileForCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop file here'**
+  String get dropFileForCheck;
+
+  /// No description provided for @dropHashFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop hash file here'**
+  String get dropHashFile;
+
+  /// No description provided for @lessThanSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'less than 1 sec.'**
+  String get lessThanSecond;
+
+  /// No description provided for @secondsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} sec.'**
+  String secondsShort(int seconds);
+
+  /// No description provided for @minutesSecondsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min. {seconds} sec.'**
+  String minutesSecondsShort(int minutes, int seconds);
 }
 
 class _AppLocalizationsDelegate

@@ -44,5 +44,54 @@
   "referenceHashTitle": "Reference hash",
   "pasteFromClipboardTooltip": "Paste from clipboard",
   "chooseHashFileTooltip": "Choose hash file",
-  "verifyButton": "Compare hashes"
+  "verifyButton": "Compare hashes",
+  "helpTooltip": "Help",
+  "helpTitle": "How to use",
+  "helpOverview": "HashChecker helps verify whether the selected file hash matches a trusted reference hash.",
+  "helpStepsTitle": "Basic workflow",
+  "helpStepChooseFile": "Choose the file to check with the folder button or drop it onto the file area.",
+  "helpStepReferenceHash": "Paste the reference hash from the clipboard or choose a file that contains the hash.",
+  "helpStepAlgorithm": "When the algorithm can be detected from the reference hash, the app selects it automatically. You can also choose it manually.",
+  "helpStepCompare": "After calculation, press the compare button to see the verification result.",
+  "helpFeaturesTitle": "Features",
+  "helpFeatureDragDrop": "Files can be added with drag and drop: one area for the checked file and one for the reference hash file.",
+  "helpFeatureProgress": "Progress and estimated remaining time are shown during calculation.",
+  "helpFeatureCopyHash": "The calculated hash is shown in full and can be selected or copied with a button.",
+  "closeButton": "Close",
+  "calculatedHashTitle": "Calculated hash",
+  "copyHashTooltip": "Copy hash",
+  "hashCopied": "Hash copied",
+  "hashProgress": "{percent}% · about {time} remaining",
+  "@hashProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dropFileForCheck": "Drop file here",
+  "dropHashFile": "Drop hash file here",
+  "lessThanSecond": "less than 1 sec.",
+  "secondsShort": "{seconds} sec.",
+  "@secondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesSecondsShort": "{minutes} min. {seconds} sec.",
+  "@minutesSecondsShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

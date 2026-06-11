@@ -44,5 +44,54 @@
   "referenceHashTitle": "Эталонный хеш",
   "pasteFromClipboardTooltip": "Вставить из буфера",
   "chooseHashFileTooltip": "Выбрать файл с хешем",
-  "verifyButton": "Сверить хеш-суммы"
+  "verifyButton": "Сверить хеш-суммы",
+  "helpTooltip": "Справка",
+  "helpTitle": "Как пользоваться",
+  "helpOverview": "HashChecker помогает проверить, совпадает ли хеш выбранного файла с эталонной суммой.",
+  "helpStepsTitle": "Основной порядок",
+  "helpStepChooseFile": "Выберите файл для проверки кнопкой с папкой или перетащите его в область файла.",
+  "helpStepReferenceHash": "Вставьте эталонный хеш из буфера обмена или выберите файл с хеш-суммой.",
+  "helpStepAlgorithm": "Если алгоритм можно определить по эталонному хешу, приложение выберет его автоматически. Также алгоритм можно выбрать вручную.",
+  "helpStepCompare": "После расчета нажмите кнопку сверки, чтобы увидеть результат проверки.",
+  "helpFeaturesTitle": "Возможности",
+  "helpFeatureDragDrop": "Файлы можно добавлять перетаскиванием: отдельно файл для проверки и отдельно файл с эталонным хешем.",
+  "helpFeatureProgress": "Во время расчета показываются прогресс и примерное оставшееся время.",
+  "helpFeatureCopyHash": "Рассчитанный хеш отображается полностью, его можно выделить или скопировать кнопкой.",
+  "closeButton": "Закрыть",
+  "calculatedHashTitle": "Рассчитанный хеш",
+  "copyHashTooltip": "Скопировать хеш",
+  "hashCopied": "Хеш скопирован",
+  "hashProgress": "{percent}% · осталось примерно {time}",
+  "@hashProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dropFileForCheck": "Перетащите файл сюда",
+  "dropHashFile": "Перетащите файл с хешем сюда",
+  "lessThanSecond": "меньше 1 сек.",
+  "secondsShort": "{seconds} сек.",
+  "@secondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesSecondsShort": "{minutes} мин. {seconds} сек.",
+  "@minutesSecondsShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }
