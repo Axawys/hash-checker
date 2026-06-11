@@ -7,6 +7,7 @@
   "readFileError": "File read error",
   "openFileDialogError": "Could not open the system file picker.",
   "fromClipboard": "From clipboard",
+  "manualHashSource": "Entered manually",
   "algorithmChanged": "Algorithm changed to {algorithm}",
   "@algorithmChanged": {
     "placeholders": {
@@ -50,7 +51,7 @@
   "helpOverview": "HashChecker helps verify whether the selected file hash matches a trusted reference hash.",
   "helpStepsTitle": "Basic workflow",
   "helpStepChooseFile": "Choose the file to check with the folder button or drop it onto the file area.",
-  "helpStepReferenceHash": "Paste the reference hash from the clipboard or choose a file that contains the hash.",
+  "helpStepReferenceHash": "Enter the reference hash manually, paste it from the clipboard, or choose a file that contains the hash.",
   "helpStepAlgorithm": "When the algorithm can be detected from the reference hash, the app selects it automatically. You can also choose it manually.",
   "helpStepCompare": "After calculation, press the compare button to see the verification result.",
   "helpFeaturesTitle": "Features",

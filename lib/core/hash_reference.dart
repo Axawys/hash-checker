@@ -39,7 +39,10 @@ HashReference? parseHashReference(String? rawText, String sourceDisplayName) {
 
   hash = hash.split(RegExp(r'\s+')).first.toLowerCase();
 
-  if (hash.length < 8) return null;
+  if (!isSupportedHashValue(hash, detectedAlgorithm: detectedAlgorithm)) {
+    return null;
+  }
+
   detectedAlgorithm ??= detectHashAlgorithmByHashLength(hash);
 
   return HashReference(
@@ -47,4 +50,14 @@ HashReference? parseHashReference(String? rawText, String sourceDisplayName) {
     sourceDisplayName: sourceDisplayName,
     detectedAlgorithm: detectedAlgorithm,
   );
+}
+
+bool isSupportedHashValue(String value, {String? detectedAlgorithm}) {
+  final hash = value.trim().toLowerCase();
+  if (!RegExp(r'^[0-9a-f]+$').hasMatch(hash)) return false;
+
+  final algorithmByLength = detectHashAlgorithmByHashLength(hash);
+  if (algorithmByLength == null) return false;
+
+  return detectedAlgorithm == null || detectedAlgorithm == algorithmByLength;
 }

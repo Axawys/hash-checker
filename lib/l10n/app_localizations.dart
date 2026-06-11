@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'From clipboard'**
   String get fromClipboard;
 
+  /// No description provided for @manualHashSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Entered manually'**
+  String get manualHashSource;
+
   /// No description provided for @algorithmChanged.
   ///
   /// In en, this message translates to:
@@ -275,7 +281,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpStepReferenceHash.
   ///
   /// In en, this message translates to:
-  /// **'Paste the reference hash from the clipboard or choose a file that contains the hash.'**
+  /// **'Enter the reference hash manually, paste it from the clipboard, or choose a file that contains the hash.'**
   String get helpStepReferenceHash;
 
   /// No description provided for @helpStepAlgorithm.

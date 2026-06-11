@@ -31,6 +31,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fromClipboard => 'Из буфера';
 
   @override
+  String get manualHashSource => 'Введено вручную';
+
+  @override
   String algorithmChanged(String algorithm) {
     return 'Алгоритм изменен на $algorithm';
   }
@@ -106,7 +109,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get helpStepReferenceHash =>
-      'Вставьте эталонный хеш из буфера обмена или выберите файл с хеш-суммой.';
+      'Введите эталонный хеш вручную, вставьте его из буфера обмена или выберите файл с хеш-суммой.';
 
   @override
   String get helpStepAlgorithm =>

@@ -30,6 +30,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fromClipboard => 'From clipboard';
 
   @override
+  String get manualHashSource => 'Entered manually';
+
+  @override
   String algorithmChanged(String algorithm) {
     return 'Algorithm changed to $algorithm';
   }
@@ -105,7 +108,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpStepReferenceHash =>
-      'Paste the reference hash from the clipboard or choose a file that contains the hash.';
+      'Enter the reference hash manually, paste it from the clipboard, or choose a file that contains the hash.';
 
   @override
   String get helpStepAlgorithm =>

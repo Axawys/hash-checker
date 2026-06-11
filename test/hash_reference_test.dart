@@ -3,21 +3,23 @@ import 'package:hashchecker/core/hash_reference.dart';
 
 void main() {
   test('parses a hash with an algorithm prefix', () {
-    final reference = parseHashReference('sha256: ABCDEF1234567890', 'Буфер');
+    final hash = 'a' * 64;
+    final reference = parseHashReference('sha256: ${hash.toUpperCase()}', 'Буфер');
 
-    expect(reference?.hash, 'abcdef1234567890');
+    expect(reference?.hash, hash);
     expect(reference?.detectedAlgorithm, 'SHA-256');
-    expect(reference?.subtitle, 'Буфер: abcdef1234567890');
+    expect(reference?.subtitle, 'Буфер: aaaaaa...aaaaaa');
   });
 
   test('parses the first token from checksum file format', () {
+    final hash = 'b' * 64;
     final reference = parseHashReference(
-      'abcdef1234567890  installer.iso',
+      '$hash  installer.iso',
       'checksum.txt',
     );
 
-    expect(reference?.hash, 'abcdef1234567890');
-    expect(reference?.detectedAlgorithm, isNull);
+    expect(reference?.hash, hash);
+    expect(reference?.detectedAlgorithm, 'SHA-256');
   });
 
   test('detects algorithm by hash length', () {
@@ -29,5 +31,17 @@ void main() {
 
   test('rejects short values', () {
     expect(parseHashReference('abc123', 'Буфер'), isNull);
+  });
+
+  test('rejects non-hex values', () {
+    expect(parseHashReference('фффффффф', 'Буфер'), isNull);
+  });
+
+  test('rejects unsupported hash lengths', () {
+    expect(parseHashReference('a' * 16, 'Буфер'), isNull);
+  });
+
+  test('rejects hash when prefix and length disagree', () {
+    expect(parseHashReference('sha256: ${'a' * 32}', 'Буфер'), isNull);
   });
 }

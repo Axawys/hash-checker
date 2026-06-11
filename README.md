@@ -36,30 +36,39 @@ HashChecker — простая кроссплатформенная утилит
 
 Скачайте и запустите установщик:
 
-[HashChecker-Setup.exe](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/HashChecker-Setup.exe)
+[HashChecker-2.1.1-windows-x64-setup.exe](https://github.com/Axawys/hash-checker/releases/download/v2.1.1/HashChecker-2.1.1-windows-x64-setup.exe)
 
 ### Linux
 
 Доступны пакеты для популярных сценариев установки:
 
-- [hashchecker_2.1.0_amd64.deb](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker_2.1.0_amd64.deb)
-- [hashchecker-2.1.0.x86_64.rpm](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.1.0.x86_64.rpm)
-- [hashchecker-2.0.0-linux-x64.tar.gz](https://github.com/Axawys/hash-checker/releases/download/v2.1.0/hashchecker-2.1.0-linux-x64.tar.gz)
+- [hashchecker_2.1.1-1_amd64.deb](https://github.com/Axawys/hash-checker/releases/download/v2.1.1/hashchecker_2.1.1-1_amd64.deb)
+- [hashchecker-2.1.1-1.x86_64.rpm](https://github.com/Axawys/hash-checker/releases/download/v2.1.1/hashchecker-2.1.1-1.x86_64.rpm)
+- [hashchecker-2.1.1-linux-x64.tar.gz](https://github.com/Axawys/hash-checker/releases/download/v2.1.1/hashchecker-2.1.1-linux-x64.tar.gz)
 
-DEB подходит для Debian, Ubuntu и совместимых дистрибутивов
-RPM подходит для Fedora и совместимых
+DEB подходит для Debian, Ubuntu и совместимых дистрибутивов:
+
+```bash
+sudo apt install ./hashchecker_2.1.1-1_amd64.deb
+```
+
+RPM подходит для Fedora и совместимых дистрибутивов:
+
+```bash
+sudo dnf install ./hashchecker-2.1.1-1.x86_64.rpm
+```
 
 Tar.gz можно запускать без установки:
 
 ```bash
-tar -xzf hashchecker-2.0.0-linux-x64.tar.gz
-./hashchecker-2.0.0-linux-x64/hashchecker
+tar -xzf hashchecker-2.1.1-linux-x64.tar.gz
+./hashchecker-2.1.1-linux-x64/hashchecker
 ```
 
 Для установки tar.gz-версии в профиль пользователя:
 
 ```bash
-./hashchecker-2.0.0-linux-x64/install.sh
+./hashchecker-2.1.1-linux-x64/install.sh
 ```
 
 ## Возможности

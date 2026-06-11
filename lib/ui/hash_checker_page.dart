@@ -21,6 +21,7 @@ class HashCheckerPage extends StatefulWidget {
 class _HashCheckerPageState extends State<HashCheckerPage> {
   final HashService hashService = const HashService();
   final List<String> availableAlgos = supportedHashAlgorithms;
+  final TextEditingController referenceHashController = TextEditingController();
 
   String selectedAlgo = 'SHA-256';
 
@@ -49,13 +50,13 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
   AppLocalizations get l10n => AppLocalizations.of(context)!;
 
   bool get canVerify {
-    final hasRef = (manualHash?.isNotEmpty ?? false) || (hashPath?.isNotEmpty ?? false);
-    return filePath != null && calculatedHash != null && hasRef;
+    return filePath != null && calculatedHash != null && (manualHash?.isNotEmpty ?? false);
   }
 
   @override
   void dispose() {
     unawaited(hashSubscription?.cancel());
+    referenceHashController.dispose();
     super.dispose();
   }
 
@@ -112,6 +113,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
           manualHash = null;
           resultState = ResultState.hidden;
         });
+        referenceHashController.clear();
       }
     } catch (_) {
       showToast(l10n.readFileError);
@@ -155,6 +157,38 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     final reference = parseHashReference(rawText, sourceDisplayName);
     if (reference == null) return false;
 
+    applyHashReference(reference, updateInput: true);
+    return true;
+  }
+
+  void updateReferenceHashInput(String rawText) {
+    final trimmed = rawText.trim();
+    if (trimmed.isEmpty) {
+      setState(() {
+        hashPath = null;
+        manualHash = null;
+        resultState = ResultState.hidden;
+        _hashSubtitleOverride = null;
+      });
+      return;
+    }
+
+    final reference = parseHashReference(trimmed, l10n.manualHashSource);
+    if (reference == null) {
+      setState(() {
+        hashPath = null;
+        manualHash = null;
+        resultState = ResultState.hidden;
+        _hashSubtitleOverride = null;
+      });
+      return;
+    }
+
+    hashPath = null;
+    applyHashReference(reference, updateInput: false);
+  }
+
+  void applyHashReference(HashReference reference, {required bool updateInput}) {
     String? toastMessage;
     var shouldRehash = false;
     if (reference.detectedAlgorithm != null && selectedAlgo != reference.detectedAlgorithm) {
@@ -169,6 +203,13 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
       _hashSubtitleOverride = reference.subtitle;
     });
 
+    if (updateInput) {
+      referenceHashController.value = TextEditingValue(
+        text: reference.hash,
+        selection: TextSelection.collapsed(offset: reference.hash.length),
+      );
+    }
+
     if (toastMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => showToast(toastMessage!));
     }
@@ -176,8 +217,6 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     if (shouldRehash && filePath != null) {
       unawaited(startHashing(filePath!));
     }
-
-    return true;
   }
 
   Future<void> startHashing(String path, {bool force = false}) async {
@@ -337,19 +376,9 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            tooltip: l10n.helpTooltip,
-            onPressed: showHelp,
-            icon: const Icon(Icons.help_outline),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 640),
@@ -358,6 +387,11 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                 children: [
                   _SectionCard(
                     title: l10n.settingsSection,
+                    trailing: IconButton(
+                      tooltip: l10n.helpTooltip,
+                      onPressed: showHelp,
+                      icon: const Icon(Icons.help_outline),
+                    ),
                     child: DropdownButtonFormField<String>(
                       initialValue: selectedAlgo,
                       decoration: InputDecoration(
@@ -373,7 +407,7 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
                   _SectionCard(
                     title: l10n.verificationDataSection,
                     child: Column(
@@ -414,26 +448,17 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                           onDragDone: (detail) => unawaited(handleDroppedHashFile(detail.files)),
                           onDragEntered: (_) => setState(() => isHashDropActive = true),
                           onDragExited: (_) => setState(() => isHashDropActive = false),
-                          child: _ActionTile(
-                            icon: Icons.paste_outlined,
+                          child: _ReferenceHashEditor(
                             title: l10n.referenceHashTitle,
-                            subtitle: isHashDropActive ? l10n.dropHashFile : hashSubtitle,
+                            controller: referenceHashController,
+                            hintText: isHashDropActive ? l10n.dropHashFile : l10n.hashReferencePlaceholder,
+                            sourceText: _hashSubtitleOverride,
                             highlighted: isHashDropActive,
-                            trailing: Wrap(
-                              spacing: 4,
-                              children: [
-                                IconButton(
-                                  tooltip: l10n.pasteFromClipboardTooltip,
-                                  onPressed: pasteHash,
-                                  icon: const Icon(Icons.content_paste),
-                                ),
-                                IconButton(
-                                  tooltip: l10n.chooseHashFileTooltip,
-                                  onPressed: pickHashFile,
-                                  icon: const Icon(Icons.folder_open),
-                                ),
-                              ],
-                            ),
+                            pasteTooltip: l10n.pasteFromClipboardTooltip,
+                            chooseFileTooltip: l10n.chooseHashFileTooltip,
+                            onChanged: updateReferenceHashInput,
+                            onPaste: pasteHash,
+                            onChooseFile: pickHashFile,
                           ),
                         ),
                         if (isHashing) ...[
@@ -455,23 +480,35 @@ class _HashCheckerPageState extends State<HashCheckerPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
                   Center(
-                    child: FilledButton(
-                      onPressed: canVerify ? verifyHashes : null,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(220, 48),
-                      ),
-                      child: Text(l10n.verifyButton),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FilledButton(
+                          onPressed: canVerify ? verifyHashes : null,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(220, 48),
+                          ),
+                          child: Text(l10n.verifyButton),
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          child: resultState == ResultState.hidden
+                              ? const SizedBox(width: 48, key: ValueKey('empty-result'))
+                              : Padding(
+                                  key: ValueKey(resultState),
+                                  padding: const EdgeInsets.only(left: 12),
+                                  child: _ResultIndicator(
+                                    state: resultState,
+                                    title: resultTitle,
+                                    description: resultDescription,
+                                  ),
+                                ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  if (resultState != ResultState.hidden)
-                    _ResultCard(
-                      state: resultState,
-                      title: resultTitle,
-                      description: resultDescription,
-                    ),
                 ],
               ),
             ),
@@ -575,21 +612,33 @@ class _HelpSection extends StatelessWidget {
 enum ResultState { hidden, success, error }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
+  const _SectionCard({
+    required this.title,
+    required this.child,
+    this.trailing,
+  });
 
   final String title;
   final Widget child;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+                ),
+                ?trailing,
+              ],
+            ),
+            const SizedBox(height: 12),
             child,
           ],
         ),
@@ -649,6 +698,99 @@ class _ActionTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           trailing,
+        ],
+      ),
+    );
+  }
+}
+
+class _ReferenceHashEditor extends StatelessWidget {
+  const _ReferenceHashEditor({
+    required this.title,
+    required this.controller,
+    required this.hintText,
+    required this.highlighted,
+    required this.pasteTooltip,
+    required this.chooseFileTooltip,
+    required this.onChanged,
+    required this.onPaste,
+    required this.onChooseFile,
+    this.sourceText,
+  });
+
+  final String title;
+  final TextEditingController controller;
+  final String hintText;
+  final String? sourceText;
+  final bool highlighted;
+  final String pasteTooltip;
+  final String chooseFileTooltip;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onPaste;
+  final VoidCallback onChooseFile;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final source = sourceText;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: highlighted ? scheme.primaryContainer.withValues(alpha: 0.45) : null,
+        border: Border.all(
+          color: highlighted ? scheme.primary : scheme.outlineVariant,
+          width: highlighted ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 10),
+          TextField(
+            controller: controller,
+            onChanged: onChanged,
+            minLines: 1,
+            maxLines: 3,
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: const OutlineInputBorder(),
+              isDense: true,
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: pasteTooltip,
+                    onPressed: onPaste,
+                    icon: const Icon(Icons.content_paste),
+                  ),
+                  IconButton(
+                    tooltip: chooseFileTooltip,
+                    onPressed: onChooseFile,
+                    icon: const Icon(Icons.folder_open),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (source != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              source,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );
@@ -734,8 +876,8 @@ class _CalculatedHashCard extends StatelessWidget {
   }
 }
 
-class _ResultCard extends StatelessWidget {
-  const _ResultCard({
+class _ResultIndicator extends StatelessWidget {
+  const _ResultIndicator({
     required this.state,
     required this.title,
     required this.description,
@@ -750,45 +892,16 @@ class _ResultCard extends StatelessWidget {
     final isSuccess = state == ResultState.success;
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSuccess ? Colors.green : colorScheme.error;
-    final bgColor = color.withValues(alpha: 0.12);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        border: Border.all(color: color, width: 2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(
-            isSuccess ? Icons.check_circle : Icons.error,
-            color: color,
-            size: 32,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return Tooltip(
+      message: '$title\n$description',
+      child: Semantics(
+        label: '$title. $description',
+        child: Icon(
+          isSuccess ? Icons.check_circle : Icons.cancel,
+          color: color,
+          size: 36,
+        ),
       ),
     );
   }
