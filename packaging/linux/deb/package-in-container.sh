@@ -52,8 +52,8 @@ fpm -s dir -t deb \
   --description "File hash checker" \
   --url https://github.com/Axawys/hash-checker \
   --license MIT \
-  --maintainer Axawys \
-  --depends libgtk-3-0 \
+  --maintainer "Axawys <axawys@gmail.com>" \
+  --depends "libgtk-3-0 | libgtk-3-0t64" \
   -C "$package_root" \
   -p "$package_path" \
   .
